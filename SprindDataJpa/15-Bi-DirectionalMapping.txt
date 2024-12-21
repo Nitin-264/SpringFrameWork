@@ -1,0 +1,346 @@
+In case of Bi-Directional Mapping, we can navigate from Parent to Child and from Child to Parent.
+To do so we use annotations like 
+ a. @OneToMany
+ b. @ManyToOne
+
+While working with Bi-Directional association, instead of specifying foreign key column using @JoinColumn in both parent and child classes
+we can specify only at one side with the help of param called "mappedBy".
+
+Note: As a good programming practise we specify mappedBy at parent side.
+	
+1. @OneToMany  :: we specify mappedBy at parent side.
+
+2. @ManyToOne  :: we can specify at any side(prefered is parent side).
+3. @OneToOne
+
+
+1. Entity class
+//Person.java
+
+package com.app.nitin.entity;
+
+import java.io.Serializable;
+import java.util.Set;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+
+@Setter
+@Getter
+@Entity
+@Table(name="OTM_Person")
+@AllArgsConstructor
+@RequiredArgsConstructor
+public class Person implements Serializable {
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private  Integer pid;
+	@Column(length = 20)
+	@NonNull
+	private String pname;
+	@Column(length = 20)
+	@NonNull
+	private   String paddrs;
+	
+	//@OneToMany(targetEntity = PhoneNumber.class,cascade = CascadeType.ALL,mappedBy = "person")  (or)
+	@OneToMany(targetEntity = PhoneNumber.class,cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+	@JoinColumn(name = "PERSON_ID",referencedColumnName ="PID")   // FK column
+	private  Set<PhoneNumber> contactDetails; //for One To Many
+	
+	public Person() {
+		System.out.println("Person:: 0-param constuctor"+this.getClass());
+	}
+
+	@Override
+	public String toString() {
+		return "Person [pid=" + pid + ", pname=" + pname + ", paddrs=" + paddrs + "]";
+	} 
+}
+
+
+//PhoneNumber.java
+package com.nt.entity;
+
+import java.io.Serializable;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+
+@Setter
+@Getter
+@Entity
+@Table(name="OTM_PHONENUMBER")
+@AllArgsConstructor
+@RequiredArgsConstructor
+public class PhoneNumber implements Serializable {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.Identity )
+    	private  Long regno;
+
+	@NonNull
+	private  Long phoneNo;
+
+	@Column(length=20)
+	@NonNull
+	private  String provider;
+
+	@Column(length=20)
+	@NonNull
+	private  String type;
+
+	@ManyToOne(targetEntity = Person.class,cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+	@JoinColumn(name = "PERSON_ID",referencedColumnName = "PID") // FK column
+	private  Person  person;  //for Many To One
+
+	public PhoneNumber() {
+		System.out.println("PhoneNumber:: 0-param constructor"+this.getClass());
+	}
+
+	@Override
+	public String toString() {
+		return "PhoneNumber [regno=" + regno + ", phoneNo=" + phoneNo + ", provider=" + provider + ", type=" + type
+				+ "]";
+	}	
+}
+
+2. Repository
+
+package com.app.nitin.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.nt.entity.Person;
+
+public interface IPersonRepo extends JpaRepository<Person,Integer> {
+
+}
+
+
+package com.app.nitin.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.nt.entity.PhoneNumber;
+
+public interface IPhoneNumberRepo extends JpaRepository<PhoneNumber,Long> {
+
+}
+
+3. Service class
+
+package com.app.nitin.service;
+
+import com.app.nitin.entity.Person;
+import com.app.nitin.entity.PhoneNumber;
+
+public interface IPersonMgmtService {
+     public   String  savePerson(Person per);
+     public   String  savePhoneNumbers(Iterable<PhoneNumber> phones);
+     public   Iterable<Person>  fetchByPerson();
+     public   Iterable<PhoneNumber> fetchByPhoneNumber();
+     public   String  deleteByPerson(int personId);
+     public   String  deleteAllPhoneNumbersOfAPerson(int personId);
+}
+
+
+package com.app.nitin.service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.app.nitin.entity.Person;
+import com.app.nitin.entity.PhoneNumber;
+import com.app.nitin.repository.IPersonRepo;
+import com.app.nitin.repository.IPhoneNumberRepo;
+
+@Service("personService")
+public class PersonMgmtServiceImpl implements IPersonMgmtService {
+	@Autowired
+	private  IPersonRepo  perRepo;
+	@Autowired
+	private  IPhoneNumberRepo  phoneRepo;
+
+	@Override
+	public String savePerson(Person per) {
+	   int idVal=perRepo.save(per).getPid();
+		return "Person and his PhoneNumbers are  is saved  with id value:"+idVal;
+	}
+
+	@Override
+	public String savePhoneNumbers(Iterable<PhoneNumber> phonesSet) {
+		for(PhoneNumber ph:phonesSet) {
+			  phoneRepo.save(ph);
+		}
+		return  ((Set<PhoneNumber>) phonesSet).size()+" no.of phoneNumbers are saved";
+	}
+	
+	@Override
+	public Iterable<Person> fetchByPerson() {
+		return perRepo.findAll();
+	}
+	
+	@Override
+	public Iterable<PhoneNumber> fetchByPhoneNumber() {
+		return phoneRepo.findAll();
+	}
+
+	@Override
+	public String deleteByPerson(int personId) {
+		//Load Parent obj ...
+		Optional<Person> opt=perRepo.findById(personId);
+		if(opt.isPresent()) {
+			  perRepo.delete(opt.get());
+			  return "Person and his  PhoneNumbers are deleted";
+		}
+		return "Person not found";
+	}
+	
+	@Override
+	public String deleteAllPhoneNumbersOfAPerson(int personId) {
+		//Load Parent obj
+		Optional<Person> opt=perRepo.findById(personId);
+		if(opt.isPresent()) {
+			//get all childs of a parent
+			Set<PhoneNumber>  childs=opt.get().getContactDetails();
+			//delete all childs 
+			childs.forEach(ph->{
+				ph.setPerson(null);
+			});
+			phoneRepo.deleteAll(childs);
+			return childs.size()+" Phonenumbers of "+personId +"Person are deleted";
+		}
+		return personId+" Person not found";
+	}
+}
+
+4. Runner class 
+
+package com.app.nitin.runner;
+
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.nitin.entity.Person;
+import com.app.nitin.entity.PhoneNumber;
+import com.app.nitin.service.IPersonMgmtService;
+
+@Component
+public class AssociationTestRunner implements CommandLineRunner {
+
+	@Autowired
+	private IPersonMgmtService service;
+
+	@Override
+	public void run(String... args) throws Exception {
+		/* 
+		
+		// === save operation parent to child ========
+
+		//prepare obj having  associcated child objs
+
+		//child objs 
+		PhoneNumber ph1=new PhoneNumber(9999999L,"airtel","office");
+		PhoneNumber ph2=new PhoneNumber(8888888L,"vodafone","residence");
+
+		 //parent obj
+		  Person person1=new Person("rajesh","hyd");
+
+		 //parent to childs
+		  ph1.setPerson(person1);
+		  ph2.setPerson(person1);
+		 
+		Set<PhoneNumber> phonesSet=Set.of(ph1,ph2);
+		 
+		  //childs to  parent
+		person1.setContactDetails(phonesSet);
+			  
+		  //inovoke service method
+		System.out.println(service.savePerson(person1));
+ 
+		 */
+		
+		   //================= Save operation child to parent ===============
+		     //child objs  
+		   	PhoneNumber ph1=new PhoneNumber(76576757L,"jio","office" );
+		     	PhoneNumber ph2=new PhoneNumber(66576155L,"vodafone","office" );
+		     
+			//parent obj
+		      Person per=new Person("karan","hyd");
+		       
+			//add parent to childs 
+		        ph1.setPerson(per); ph2.setPerson(per);
+		        
+			//childs to parent
+		        Set<PhoneNumber> phonesSet=Set.of(ph1,ph2);
+		        
+			per.setContactDetails(phonesSet);
+		      
+		      System.out.println(service.savePhoneNumbers(phonesSet));
+
+		/*//================= Load operation  parent to child ===============
+			service.fetchByPerson().forEach(per->{
+				System.out.println("parent:::"+per);
+				Set<PhoneNumber> childs=per.getContactDetails();
+				childs.forEach(ph->{
+						  	 System.out.println("child ::"+ph);
+						  }
+						);
+			});
+		*/
+
+		// ================= Load operation child to parent ===============
+		/*service.fetchByPhoneNumber().forEach(ph->{
+			 System.out.println("child::"+ph);
+			Person per=ph.getPerson();
+			System.out.println("parent:"+per);
+		});
+
+		*/
+		 // ==============  delete Operation  parent to child ============
+		 //System.out.println(service.deleteByPerson(23));
+		 //System.out.println(service.deleteAllPhoneNumbersOfAPerson(28));
+
+	}// run
+}// class
+
+
+
+

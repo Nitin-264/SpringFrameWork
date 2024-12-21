@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org/">
+<head>
+<meta charset="UTF-8">
+<title>Employee Details</title>
+</head>
+<body>
+       <h1> Employee Details::[[${employee}]]</h1>
+       
+       <hr>
+	<table border='1' th:object="${employee}">
+		<tr>
+			<th>EMPID</th>
+			<th>EMPNAME</th>
+			<th>EMPSAL</th>
+		</tr>
+		<tr>
+		    <td th:field ="*{empId}"/>
+		    <td th:field ="*{empName}"/>
+		    <td th:field ="*{empSal}"/>
+		</tr>
+    </table>
+       
+</body>
+</html>

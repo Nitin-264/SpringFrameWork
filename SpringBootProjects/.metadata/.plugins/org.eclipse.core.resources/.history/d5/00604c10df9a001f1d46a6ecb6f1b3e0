@@ -1,0 +1,29 @@
+package in.pwskills.nitin.bean;
+
+import java.io.Serializable;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name="stdtab")
+public class Student implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	@Id
+	@Column(name = "sid")
+	private Integer stdId;
+
+	@Column(name = "sname")
+	private String stdName;
+
+	@Column(name = "smail")
+	private String stdEmail;
+
+}

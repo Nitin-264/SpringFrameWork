@@ -1,0 +1,113 @@
+
+1. Entity class
+package com.app.nitin.entity;
+
+import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
+@Entity
+@Table(name="CUSTOMER_INFO")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@RequiredArgsConstructor
+public class Customer implements Serializable {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer custId;
+
+
+	@NonNull
+	@Column(length = 20)
+	private String custName;
+
+	@NonNull
+	@Column(length = 20)
+	private String custAddrs;
+
+	@NonNull
+	private LocalDateTime  dob;
+
+	@NonNull
+	private LocalTime  top;
+
+	@NonNull
+	private  LocalDate  dop;
+
+}
+
+2. Repository
+package com.app.nitin.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.nitin.entity.Customer;
+
+public interface ICustomerRepo extends JpaRepository<Customer, Integer> {
+
+}
+
+3. Runner 
+package com.app.nitin.runner;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.nt.entity.Customer;
+import com.app.nitin.repository.ICustomerRepository;
+
+
+@Component
+public class DateAndTimeTestRunner implements CommandLineRunner {
+	@Autowired
+	private  ICustomerRepository repo;
+	@Override
+	public void run(String... args) throws Exception {
+		/*Customer cust=new Customer("raja","hyd",
+				              LocalDateTime.of(1990,10,21,15,10,3),
+				              LocalTime.now(),
+				              LocalDate.now());
+				                                                     
+		System.out.println(repo.registerCustomer(cust));
+		*/
+		repo.getAllCusotmers().forEach(System.out::println);
+
+	}
+
+}
+
+4. application.properties
+#DataSource cfg
+spring.datasource.url=jdbc:mysql:///practise
+spring.datasource.username=root
+spring.datasource.password=root123
+
+# JPA-Hiberante properties
+spring.jpa.show-sql=true
+spring.jpa.hibernate.ddl-auto=create
+spring.jpa.properties.hibernate.format_sql=true
+#other possible values create,validate,create-drop
+
+
+
+

@@ -1,0 +1,7 @@
+package in.pwskills.nitin.bean;
+
+import java.io.Serializable;
+
+public class MobileNumber implements Serializable {
+
+}

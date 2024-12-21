@@ -1,0 +1,33 @@
+package in.pwskills.nitin.runner;
+
+import java.util.Arrays;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import in.pwskills.nitin.bean.Employee;
+import in.pwskills.nitin.dao.IEmployeeRepo;
+
+@Component
+public class EmployeeRunner implements CommandLineRunner {
+
+	@Autowired
+	private IEmployeeRepo repo;
+	
+	@Override
+	public void run(String... args) throws Exception {
+		// TODO Auto-generated method stub
+
+		repo.saveAll(Arrays.asList(new Employee(101, "AA", 200.0, "DEV"), new Employee(102, "BA", 500.0, "DEV"),
+				new Employee(103, "AC", 200.0, "QA"), new Employee(104, "DD", 400.0, "QA"),
+				new Employee(105, "EF", 600.0, "DEV")));
+
+		repo.fetchAllEmployees(300.0).forEach(System.out::println);
+
+		repo.fetchNameOfEmployees().forEach(System.out::println);
+
+		
+	}
+
+}

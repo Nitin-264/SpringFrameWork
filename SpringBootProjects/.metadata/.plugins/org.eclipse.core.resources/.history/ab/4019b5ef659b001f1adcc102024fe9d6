@@ -1,0 +1,29 @@
+package in.pwskills.nitin.dao;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import in.pwskills.nitin.bean.Employee;
+
+public interface IEmployeeRepo extends JpaRepository<Employee, Integer> {
+
+	@Query("Select e.empname , d.deptName from  Employee e INNER JOIN e.dob d")
+	public List<Object[]> getEnameDeptNames();
+	
+	@Query("select e.empname, d.deptName from Employee e LEFT JOIN e.dob d")
+	public List<Object[]> getAllEnamesAndDeptNamesIfExist();
+	
+	@Query("select e.empname, d.deptName from Employee e RIGHT JOIN e.dob d")
+	public List<Object[]> getAllDeptsAndEnamesIfExist();
+	
+	@Query("select e.empname, d.deptName from Employee e LEFT JOIN e.dob d where d.deptId IS NULL")	
+	public List<Object[]> getAllEnamesAndDeptNamesIsNull();
+	
+	@Query("select e.empname, d.deptName from Employee e RIGHT JOIN e.dob d where e.ename IS NULL")		
+	public List<Object[]> getDeptNamesAndEmployeeIsNull();
+	
+	@Query("Select e.empname , d.deptName from  Employee e INNER JOIN e.dob d where d.deptName=:deptName")	
+	public List<Object[]> getEmployeesOfParticularDepartment(String deptName);
+}

@@ -1,0 +1,204 @@
+Association Mapping(HAS-A)
+++++++++++++++++++++++++++
+Database Concepts ::  Multiplicity(1...1/1...*/*.....1/*....*)
+
+ => Book   HAS-A  Author(1....1 / 1....*/*.....1/*......*)
+	[One book is written by Many Authors, Many books written by one Author,One Author wrote Many books]
+
+ => Car    HAS-A  Engine(1....1) 
+	[One car has One engine]
+
+ => Person HAS-A  Address(1....*/*....1)
+		[One Person can have multiple address[local address/permanenet addres], Many People can have one address ]
+
+ => Product HAS-A GST(1....1)
+
+ => Employee HAS-A Department(1....*/*----1)
+       [Many Employees work for one Department]
+
+=> In case of Association Two Tables are connected using "PK-FK".
+=> Two tables will be used here, where each table will have there own PK,but to link two table we need FK.
+	Hint :: FK Column is created at "Many-Side".
+
+Note
+=> 1...1[In case of 1....1 internally we use *.....1 and we use unique] 
+=> 1...M(At many side FK->C1FK)
+=> (FK->C2FK)M....1
+=> M.....M[Here seperate table will be created(JoinTable) with columns like C1Fk(JoinColumn) , C2Fk(InverseJoinColumn)]
+
+Multiplicity is implemented by hibernate with JPA using 2 types
+a. Collection[If child is many then collection, 1....*,*....*]
+b. Non-Collection[If child is one then Non-Collection, 1....1, *...1]
+
+
+eg#1. Many-One Association in unidirectional style
+
+1. Entity class
+
+	Employee.java
+	=============
+package com.app.nitin.beans;
+
+import java.io.Serializable;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "empTab")
+public class Employee implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@Column(name = "eid")
+	private Integer empId;
+
+	@Column(name = "ename")
+	private String empName;
+
+	@Column(name = "esal")
+	private Double empSal;
+
+	@ManyToOne
+	@JoinColumn(name = "didFk")
+	private Department dob;
+
+}
+
+	Department.java
+	===============
+package com.app.nitin.beans;
+
+import java.io.Serializable;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name="depTab")
+public class Department implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	@Id
+	@Column(name="did")
+	private Integer deptId;
+	@Column(name="dname")
+	private String deptName;
+	@Column(name="dadmin")
+	private String deptAdmin;
+}
+
+2. Repository interface
+
+package com.app.nitin.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.nitin.beans.Department;
+
+public interface IDepartmentRepository extends JpaRepository<Department, Integer> {
+
+}
+ 
+package com.app.nitin.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.nitin.beans.Employee;
+
+public interface IEmployeeRepository extends JpaRepository<Employee, Integer> {
+
+}
+
+
+3. Runner class
+
+package com.app.nitin.runner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.nitin.beans.Department;
+import com.app.nitin.beans.Employee;
+import com.app.nitin.repository.IDepartmentRepository;
+import com.app.nitin.repository.IEmployeeRepository;
+
+@Component
+public class TestRunner implements CommandLineRunner {
+
+	@Autowired
+	private IDepartmentRepository drepo;
+	
+	@Autowired
+	private IEmployeeRepository erepo;
+
+	@Override
+	public void run(String... args) throws Exception {
+		
+		Department d1 = new Department(1054, "DEV", "AJAY");
+		Department d2 = new Department(1055, "QA", "SAM");
+		Department d3 = new Department(1056, "BA", "KUMAR");
+		drepo.save(d1);
+		drepo.save(d2);
+		drepo.save(d3);
+
+		Employee e1 = new Employee(10, "SAM", 500.0, d1);
+		Employee e2 = new Employee(11, "RAM", 600.0, d2);
+		Employee e3 = new Employee(12, "SYED", 700.0, d1);
+		Employee e4 = new Employee(13, "AJAY", 700.0, null);
+
+		erepo.save(e1);
+		erepo.save(e2);
+		erepo.save(e3);
+		erepo.save(e4);
+
+	}
+}
+
+4. application.properties
+
+spring.application.name=01-spring-data-jpa-crudrepository
+spring.datasource.url = jdbc:mysql:///practise
+spring.datasource.username = root
+spring.datasource.password=root123
+
+#hibernate using jpa properties
+spring.jpa.show-sql=true
+spring.jpa.hibernate.ddl-auto=create
+spring.jpa.properties.hibernate.format_sql=true
+
+
+
+
+
+
+
+
+
+

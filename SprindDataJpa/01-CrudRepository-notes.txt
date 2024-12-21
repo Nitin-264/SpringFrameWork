@@ -1,0 +1,375 @@
+Data JPA: It will generate code to perform operations.
+=> This is given by Spring boot, it internally generates JPA code only.
+=> Dynamic Proxy : A class created at runtime and object also.
+
+----- Given interfaces by Spring boot data JPA ----
+	1. CrudRepository<T, ID>  [insert , update , delete, select ]
+	2. PagingAndSortingRepository<T, ID>  [Sorting, Pagination ]
+	3. JpaRepository<T,ID>  [JPA based Operations, Example obj, batch..etc]
+
+SimpleJpaRepository<T, ID> : It is class having internally JPA code for above interfaces.
+
+=> SimpleJpaRepository is a template class ie how Database Operations code looks like (Generic code, not for a Specific class)
+=> We need to define one interface that extends any one of one Repository interface.
+=> Internally Data JPA uses SimpleJpaRepository and ___Repository interface and generates one class(Proxy)
+
+
+eg#1.
+1. Entity class
+package com.app.nitin.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="student")
+public class Student implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer sid;
+
+	private String sname;
+	private String saddress;
+	private Integer sage;
+
+	setXXX(),getXXX(),toString();
+
+}
+
+2. Repository interfaces
+package com.app.nitin.repo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.app.nitin.entity.Student;
+
+public interface StudentRepository 
+	extends JpaRepository<Student, Integer>
+{
+
+}
+
+3. properties
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/boot7am
+spring.datasource.username=root
+spring.datasource.password=root
+
+spring.jpa.show-sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.format_sql=true
+
+4. Runner class
+package com.app.nitin.runner;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.nitin.entity.Student;
+import com.app.nitin.repo.StudentRepository;
+
+@Component
+public class TestOprRunner implements CommandLineRunner {
+
+	@Autowired
+	private StudentRepository repo;
+	
+	public void run(String... args) throws Exception {
+		System.out.println(repo.getClass().getName());
+		
+		Student sob = new Student();
+		sob.setStdId(99);
+		sob.setStdName("SAM");
+		sob.setStdFee(20000.0);
+		
+		repo.save(sob); // INSERT OR UPDATE
+		
+	}
+
+}
+==================================================================
+1. CrudRepository
+
+a. save(object) 
+	=> It checks whether the object is present in db table based on primary key(PK)
+	   select * from entity where pid = value
+           if record present -> update, otherwise -> insert	
+        => If same object is present in db, then save() does nothing, It will not peform insert or update.
+
+b. saveAll(Iterable)
+	=> This method takes multiple objects at at time as a Collection type and performs save operations like save() method.
+
+c. findAll() :: Iterable
+	=> This method is to used to fetch the data from db tables in Iterable format.
+		(select * from tablename)
+
+d. existsById() :: boolean
+	=> This method is used to check whether the given object exists or not by id(PK).
+	=> if present return true otherwise return false.
+
+e. count() :: long
+	=> it is used to check how many records are there are not.
+	=> it returns no of rows from the table
+
+	   
+1. Entity class
+
+package com.app.nitin.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="booktab")
+public class Book {
+	
+	@Id
+	@Column(name="bid")
+	private Integer bookId;
+	
+	@Column(name="bname")
+	private String bookName;
+	
+	@Column(name="bauth")
+	private String bookAuthor;
+	
+	@Column(name="bcost")
+	private Double bookCost;
+	
+}
+
+2. Repository interface
+
+package com.app.nitin.repo;
+
+import org.springframework.data.repository.CrudRepository;
+
+import com.app.nitin.entity.Book;
+
+public interface BookRepository extends CrudRepository<Book, Integer>{}
+
+3. properties
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/boot7am
+spring.datasource.username=root
+spring.datasource.password=root
+
+spring.jpa.show-sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.format_sql=true
+
+4. Runner class
+package com.app.nitin.runner;
+
+import java.util.Arrays;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.nitin.entity.Book;
+import com.app.nitin.repo.BookRepository;
+
+@Component
+public class TestOperations implements CommandLineRunner {
+
+	@Autowired
+	private BookRepository repo;
+
+	public void run(String... args) throws Exception {
+		// System.out.println(repo.getClass().getName());
+		Book b1 = new Book(10, "Core Java", "SAM", 200.0);
+		repo.save(b1);
+
+		repo.save(new Book(11, "Adv Java", "SYED", 300.0));
+		repo.save(new Book(12, "Spring", "SAM", 400.0)); // INSERT
+		repo.save(new Book(12, "Spring 6.x", "SAM", 600.0)); // UPDATE
+
+		repo.saveAll(Arrays.asList(
+				new Book(13, "HTML CSS", "AJAY", 100.0), 
+				new Book(14, "Bootstrap", "AJAY", 200.0),
+				new Book(15, "ReactJS", "AJAY", 300.0)));
+
+		Iterable<Book> data = repo.findAll();
+	
+		//method reference
+		data.forEach(System.out::println);
+
+		//lambda expression
+		data.forEach(b -> System.out.println(b));
+
+		System.out.println(repo.existsById(13));
+
+		System.out.println(repo.count());
+
+	}
+
+}
+++++++++++++++++++++++++++++++++++++++++++++2nd Day++++++++++++++++++++++++++++++++++++++++++++++++++++
+CrudRepository Methods:-
+
+JDK 1.8 : Optional<T> : This is used to avoid null problems [NullPointerException only]
+
+=> It is like a wrapper object to the actual data (or) container object for actual data.
+
+=> Optional returns Actual data if present (isPresent() true) or else it returns empty data.
+=============================================================================================
+6. findById(id):Optional<T>
+ 	=> This method is used to fetch one row data from DB based on PK.
+		SQL: select * from product where id=10;
+
+7. findAllById(idsAsList):Iterable<T>
+  	It uses in operator to fetch data using SELECT SQL.
+		Example SQL:select * from book_tab where pid in (11,23,45,67,89);
+
+** All operations (pre-defined methods) are done based on PK(ID) only
+   @Id must be given in Entity class, else No identifier specified for entity
+=================================================================
+8.
+deleteById(ID id) : This method is used to delete one row data based on ID given. 
+		    It internally calls below delete method.
+		    First check object is present or not using findById if present call below delete(obj) method
+		    else throw exception like: EmptyResultDataAccessException
+
+9.*** DELETE OBJECT IS A STANDARD IN JPA.
+delete(T entity)
+  It is take object as input and try to delete that one.
+
+10. deleteAllById(idsAsList)
+  This method calls deleteById(id) in a loop for every id.
+  
+11. deleteAll() it is fetching all rows data using findAll() method passing one by one object to delete(obj) method.
+
+12. deleteAll(listOfObjects):
+     It is also calling delete(obj) in a for each loop.
+================================================================================
+same code as above
+================================================================================
+3. package com.app.nitin.exception;
+
+public class BookNotFoundException extends RuntimeException {
+
+	private static final long serialVersionUID = 1L;
+
+	public BookNotFoundException() {
+		super();
+	}
+	
+	public BookNotFoundException(String message) {
+		super(message);
+	}
+}
+
+4. Runner class
+package com.app.nitin.runner;
+
+import java.util.Arrays;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.app.nitin.entity.Book;
+import com.app.nitin.repo.BookRepository;
+import com.app.nitin.exception
+
+@Component
+public class TestOperations implements CommandLineRunner {
+
+	@Autowired
+	private BookRepository repo;
+
+	public void run(String... args) throws Exception {
+		// ===================select operation======================
+		Optional<Book> opt = repo.findById(140); 
+			if(opt.isPresent()) { 
+				Book b3 =opt.get(); System.out.println(b3); 
+			} else {
+		 		System.out.println("DATA NOT FOUND"); 
+				throw new BookNotFoundException("BOOK NOT EXIST WITH ID "); 
+			}
+	
+
+		Book b4 = repo.findById(14).orElseThrow(
+				() -> new BookNotFoundException("BOOK NOT EXIST WITH ID "));
+		System.out.println(b4);
+		
+		//=======================delete operation============================
+		 repo.deleteById(15);
+		 
+		 repo.delete(repo
+				.findById(14)
+				.orElseThrow(
+					()-> new BookNotFoundException(
+						String.format("--- %s not exists for the id ",Book.class.getName(),14)
+					)
+			    )
+			);
+
+		 repo.deleteAll();
+	}
+}
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

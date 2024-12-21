@@ -1,0 +1,14 @@
+package in.pwskills.nitin.dao;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import in.pwskills.nitin.bean.Employee;
+
+public interface IEmployeeRepo extends JpaRepository<Employee, Integer> {
+
+	@Query("Select e.ename , d.deptName from  Employee e INNER JOIN e.dob d")
+	public List<Object[]> getEnameDeptNames();
+}

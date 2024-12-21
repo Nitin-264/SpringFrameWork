@@ -1,0 +1,28 @@
+package in.pwskills.nitin.runner;
+
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import in.pwskills.nitin.dao.IModelRepo;
+import in.pwskills.nitin.dao.IProductRepo;
+
+
+@Component
+public class TestRunner implements CommandLineRunner {
+
+	@Autowired
+	private IModelRepo mrepo;
+	
+	@Autowired
+	private IProductRepo prepo;
+	@Override
+	public void run(String... args) throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+}

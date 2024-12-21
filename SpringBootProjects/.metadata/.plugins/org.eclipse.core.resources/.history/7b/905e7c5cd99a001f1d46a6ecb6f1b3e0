@@ -1,0 +1,7 @@
+package in.pwskills.nitin.dao;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public I IDepartmentRepositry implements JpaRepository<Department, Integer> {
+
+}

@@ -1,0 +1,94 @@
+					==============================
+					POSTMAN , SWAGGER and Open API
+					==============================
+POSTMAN : 
+>> It is tool used to Test our application, by making HTTP Request.
+>> Here, we need to enter detail manually
+  Method Type, URL, Headers, Body, Type..etc
+
+-------------------------------------------------------------------------
+Swagger : (Programmer one time configuration)
+
+>> Open Source API used to document all Endpoint details. ie Need not to enter details manually. Just enter data.
+>> For this we need to code one time configuration
+----------------------------------------------------------------------
+Open API: (NO Configuration)
+>> Open Source API used to document all Endpoint details.
+ie Need not to enter details manually. Just enter data.
+>> we need not to code any configuration
+
+
+Documentation is an essential part of building REST APIs. 
+we’ll look at SpringDoc, which simplifies the generation and maintenance of API docs based on the OpenAPI-3 specification 
+for Spring Boot 3.x applications.
+
+1. Spring Boot 3.x requires to use version 2 of springdoc-openapi:
+<dependency>
+	<groupId>org.springdoc</groupId>
+	<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+	<version>2.5.0</version>
+</dependency>
+
+2. After setting up the dependency correctly, we can run our application and find the OpenAPI descriptions at /v3/api-docs, which is the default path:
+	http://localhost:9999/v3/api-docs
+
+	Further, we can customize the path in application.properties using the springdoc.api-docs property. 
+	For example, we can set the path to /api-docs:
+		application.properties
+		springdoc.api-docs.path=/api-docs
+
+	Then, we’ll be able to access the docs at:
+		http://localhost:9999/api-docs
+
+	The OpenAPI definitions are in JSON format by default.
+
+3. Integration with Swagger UI
+	Besides generating the OpenAPI3 specification, we can integrate springdoc-openapi with Swagger UI to interact with our API specification 
+	and exercise the endpoints.
+	The springdoc-openapi dependency already includes Swagger UI, so we’re all set to access the API documentation at:
+		URL :: http://localhost:8080/swagger-ui/index.html
+
+#documentation configuration
+springdoc.swagger-ui.path=/swagger-ui-custom.html
+springdoc.swagger-ui.operationsSorter=method
+
+	URL :: http://localhost:9999/swagger-ui-custom.html
+
+4. Generate Documentation Using @Operation and @ApiResponses
+   Next, let’s see how we can add some description to our API using a couple of OpenAPI-specific annotations.
+   To do that, we’ll annotate our controller’s /remove/{id} endpoint with @Operation and @ApiResponses:
+@Operation(summary = "Delete a book by its id")
+@ApiResponses(
+		value = { 
+			  @ApiResponse(
+					  responseCode = "200", description = "Found the Student", 
+					  content = { 
+							  @Content(mediaType = "application/json", schema = @Schema(implementation = Student.class)) 
+						    }
+				    ),
+			  @ApiResponse(responseCode = "500", description = "Student not found", 
+					content = 
+			  			{
+					  		@Content(mediaType ="text/plain")
+			  			}
+			) 
+		   }
+		)
+@DeleteMapping("/remove/{id}")
+public ResponseEntity<String> deleteStudent(
+				@PathVariable("id") Integer id
+		) 
+{
+	ResponseEntity<String> response = null;
+	try {
+		service.deleteStudent(id);
+		response = ResponseEntity.ok("STUDENT '"+id+"' REMOVED");
+	} catch (StudentNotFoundException e) {
+		e.printStackTrace();
+		throw e;
+	}
+	return response;
+} 
+
+
+
